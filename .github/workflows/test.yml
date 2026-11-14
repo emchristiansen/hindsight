@@ -20,6 +20,7 @@ jobs:
       clients-ts: ${{ steps.filter.outputs.clients-ts }}
       clients-python: ${{ steps.filter.outputs.clients-python }}
       clients-rust: ${{ steps.filter.outputs.clients-rust }}
+      rust-config: ${{ steps.filter.outputs.rust-config }}
       clients-go: ${{ steps.filter.outputs.clients-go }}
       control-plane: ${{ steps.filter.outputs.control-plane }}
       figures: ${{ steps.filter.outputs.figures }}
@@ -114,8 +115,15 @@ jobs:
             - 'package-lock.json'
           clients-python:
             - 'hindsight-clients/python/**'
+          # Root Rust inputs also affect the CLI built by the Windows embed job.
+          # Keep this separate from core/embed to avoid selecting unrelated jobs.
+          rust-config:
+            - '.cargo/config.toml'
+            - 'rust-toolchain.toml'
           clients-rust:
             - 'hindsight-clients/rust/**'
+            - '.cargo/config.toml'
+            - 'rust-toolchain.toml'
             # The Rust client is not committed source — build.rs regenerates it with
             # progenitor from this spec, and progenitor emits query params POSITIONALLY
             # in alphabetical order. So adding one query param to any endpoint shifts
@@ -130,6 +138,8 @@ jobs:
             - 'package-lock.json'
           cli:
             - 'hindsight-cli/**'
+            - '.cargo/config.toml'
+            - 'rust-toolchain.toml'
             # Same reason as clients-rust above: the CLI compiles against the
             # progenitor-generated client, so an OpenAPI change alone can break it.
             - 'hindsight-docs/static/openapi.json'
@@ -1419,6 +1429,8 @@ jobs:
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.100.0
 
     - name: Cache cargo
       uses: actions/cache@v5
@@ -3059,6 +3071,7 @@ jobs:
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
       with:
+        toolchain: 1.100.0
         targets: aarch64-unknown-linux-gnu
 
     - name: Cache cargo
@@ -3124,6 +3137,8 @@ jobs:
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.100.0
 
     - name: Cache cargo
       uses: actions/cache@v5
@@ -4897,6 +4912,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' ||
       needs.detect-changes.outputs.core == 'true' ||
       needs.detect-changes.outputs.embed == 'true' ||
+      needs.detect-changes.outputs.rust-config == 'true' ||
       needs.detect-changes.outputs.ci == 'true')
     runs-on: windows-latest
     timeout-minutes: 30
@@ -4973,6 +4989,8 @@ jobs:
     # drop it into ~/.local/bin where find_cli_binary() looks first.
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.100.0
 
     - name: Cache cargo build
       uses: actions/cache@v5
@@ -5289,6 +5307,8 @@ jobs:
     - name: Install Rust
       if: matrix.language == 'cli'
       uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.100.0
 
     - name: Cache cargo
       if: matrix.language == 'cli'
@@ -5591,6 +5611,8 @@ jobs:
 
     - name: Install Rust
       uses: dtolnay/rust-toolchain@stable
+      with:
+        toolchain: 1.100.0
 
     - name: Cache cargo
       uses: actions/cache@v5
