@@ -16,8 +16,11 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Rust toolchain (required for pgvectorscale)
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.100.0
 ENV PATH="/root/.cargo/bin:${PATH}"
+# Third-party builds run under /tmp, outside the repository's Cargo config discovery.
+ENV CARGO_REGISTRY_GLOBAL_MIN_PUBLISH_AGE="14 days" \
+    CARGO_RESOLVER_INCOMPATIBLE_PUBLISH_AGE="deny"
 
 # Install pgvector (required by pgvectorscale)
 RUN cd /tmp && \
